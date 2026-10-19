@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air Quality Tree — Data Storytelling</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div>
+      <h1>🌳 Air Quality Tree</h1>
+      <p>3D Data Storytelling &amp; Air Quality Analysis</p>
+    </div>
+    <div class="header-badge">DATA-DRIVEN STORYTELLING</div>
+  </header>
+
+  <main class="layout">
+    <section class="visual-section">
+      <div class="dataset-card card">
+        <div class="section-label">DATASET</div>
+        <div class="upload-row">
+          <label for="excelFile" class="upload-button">Choose Excel File</label>
+          <input type="file" id="excelFile" accept=".xlsx,.xls" hidden>
+          <span id="fileName" class="file-name">Belum ada dataset</span>
+        </div>
+        <div id="datasetStatus" class="dataset-status">Silakan upload dataset Excel.</div>
+      </div>
+
+      <div class="tree-card card">
+        <div class="tree-header">
+          <div>
+            <h2>Air Quality Tree</h2>
+            <p id="treeDescription">Cabang fraktal berubah mengikuti data kualitas udara pada waktu yang dipilih.</p>
+          </div>
+          <div id="qualityBadge" class="quality-badge good">WAITING FOR DATA</div>
+        </div>
+        <div id="treeContainer" class="tree-container">
+          <div id="treePlaceholder" class="tree-placeholder">
+            <div class="placeholder-icon">🌳</div>
+            <div>Upload dataset untuk menampilkan visualisasi pohon.</div>
+          </div>
+        </div>
+        <div class="tree-legend">
+          <div class="legend-item"><span class="legend-dot green"></span>Kondisi baik</div>
+          <div class="legend-item"><span class="legend-dot yellow"></span>Kondisi sedang</div>
+          <div class="legend-item"><span class="legend-dot red"></span>Kondisi buruk</div>
+        </div>
+      </div>
+
+      <div class="analysis-grid">
+        <div class="analysis-card card">
+          <h3>📊 Pollution Index</h3>
+          <div id="pollutionIndex" class="big-number">--</div>
+          <p>Indeks relatif untuk storytelling berdasarkan CO, NOx, dan NO₂. Bukan AQI resmi.</p>
+        </div>
+        <div class="analysis-card card">
+          <h3>📈 Dominant Pollutant</h3>
+          <div id="dominantPollutant" class="analysis-value">--</div>
+          <p>Polutan dengan kontribusi relatif terbesar pada waktu yang dipilih.</p>
+        </div>
+        <div class="analysis-card card">
+          <h3>🌡️ Environment</h3>
+          <div id="environmentStatus" class="analysis-value">--</div>
+          <p>Kondisi temperatur dan kelembapan pada waktu yang dipilih.</p>
+        </div>
+      </div>
+
+      <section class="analysis-section card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">DATA ANALYSIS</span>
+            <h2>Statistical Analysis</h2>
+            <p>Analisis dilakukan terhadap keseluruhan dataset, sedangkan grafik temporal dapat difokuskan ke tanggal aktif.</p>
+          </div>
+          <div id="analysisStatus" class="analysis-status">Menunggu dataset</div>
+        </div>
+
+        <div class="dataset-summary-grid">
+          <div class="summary-mini"><span>Valid rows</span><strong id="statRows">--</strong></div>
+          <div class="summary-mini"><span>Missing values</span><strong id="statMissing">--</strong></div>
+          <div class="summary-mini"><span>Strongest correlation</span><strong id="statStrongest">--</strong></div>
+          <div class="summary-mini"><span>Outliers</span><strong id="statOutliers">--</strong></div>
+        </div>
+
+        <div class="analysis-grid-2">
+          <article class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>🔗 Correlation Analysis</h3>
+                <p>Hubungan dua variabel numerik menggunakan Pearson correlation.</p>
+              </div>
+              <div class="select-group">
+                <label>X <select id="corrX"></select></label>
+                <label>Y <select id="corrY"></select></label>
+              </div>
+            </div>
+            <div class="correlation-result">
+              <strong id="corrValue">r = --</strong>
+              <span id="corrInterpretation">Belum ada data.</span>
+            </div>
+            <div id="scatterPlot" class="chart-wrap"></div>
+          </article>
+
+          <article class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>📊 Distribution &amp; Outlier</h3>
+                <p>Distribusi nilai, kuartil, IQR, dan deteksi outlier.</p>
+              </div>
+              <div class="select-group">
+                <label>Variable <select id="distVariable"></select></label>
+              </div>
+            </div>
+            <div id="distributionPlot" class="chart-wrap"></div>
+            <div class="stats-table" id="distributionStats"></div>
+          </article>
+        </div>
+
+        <article class="chart-card full-chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>⏱ Time-Series Analysis</h3>
+              <p id="timeSeriesDescription">Perubahan variabel terhadap waktu pada tanggal aktif.</p>
+            </div>
+            <div class="select-group">
+              <label>Variable <select id="timeSeriesVariable"></select></label>
+            </div>
+          </div>
+          <div id="timeSeriesPlot" class="chart-wrap large"></div>
+        </article>
+
+        <div class="insight-card" id="analysisInsight">
+          Upload dataset untuk menghasilkan insight analisis.
+        </div>
+      </section>
+    </section>
+
+    <aside class="sidebar">
+      <div class="control-card card">
+        <h2>Temporal Control</h2>
+        <label for="dateSelect">Tanggal</label>
+        <select id="dateSelect" disabled><option value="">Pilih tanggal</option></select>
+        <div id="currentDateTime" class="current-date-time">--</div>
+        <div class="time-box">
+          <div class="time-header"><span>Waktu</span><strong id="timeValue">--</strong></div>
+          <input type="range" id="timeSlider" min="0" max="0" value="0" disabled>
+          <div class="time-labels"><span id="startTime">--</span><span id="middleTime">--</span><span id="endTime">--</span></div>
+        </div>
+        <div id="controlStatus" class="control-status waiting">WAITING FOR DATA</div>
+      </div>
+
+      <div class="condition-card card">
+        <h2>Current Air Condition</h2>
+        <div id="conditionContent" class="condition-content"><div class="empty-message">Pilih dataset terlebih dahulu.</div></div>
+      </div>
+
+      <div class="mapping-card card">
+        <h2>🌳 Tree Mapping</h2>
+        <div class="mapping-item"><span>CO</span><span>Kepadatan dan ukuran daun</span></div>
+        <div class="mapping-item"><span>NOx</span><span>Jumlah serta sudut cabang</span></div>
+        <div class="mapping-item"><span>NO₂</span><span>Warna daun</span></div>
+        <div class="mapping-item"><span>Temperature</span><span>Tinggi pohon</span></div>
+        <div class="mapping-item"><span>Humidity</span><span>Kabut dan kemiringan</span></div>
+      </div>
+
+      <div class="method-card card">
+        <h2>🔬 Analysis Method</h2>
+        <div class="method-item"><strong>Preprocessing</strong><span>-200 → missing</span></div>
+        <div class="method-item"><strong>Correlation</strong><span>Pearson r</span></div>
+        <div class="method-item"><strong>Distribution</strong><span>Histogram + box plot</span></div>
+        <div class="method-item"><strong>Outlier</strong><span>IQR × 1.5</span></div>
+        <div class="method-item"><strong>Temporal</strong><span>Time-series</span></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script src="analysis.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
